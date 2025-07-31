@@ -63,7 +63,7 @@ const TimeZone: React.FC<{ keywords: string[] }> = ({keywords}) => {
     // Only run during initialization when no timezone is set
     useEffect(() => {
         if (!publicationTimezone && timezoneData.length > 0) {
-            const defaultTimezone = findMatchingTimezone(timezoneData)?.name || '';
+            const defaultTimezone = findMatchingTimezone(timezoneData);
             updateSetting('timezone', defaultTimezone || null);
             setShouldSaveAfterUpdate(true);
         }

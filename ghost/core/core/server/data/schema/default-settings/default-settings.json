@@ -125,7 +125,7 @@
         "timezone": {
             "defaultValue": "",
             "validations": {
-                "isTimezone": true,
+		"type": "string"
             },
             "type": "string"
         },

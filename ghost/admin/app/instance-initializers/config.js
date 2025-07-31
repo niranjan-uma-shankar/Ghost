@@ -11,19 +11,6 @@ export function initialize(applicationInstance) {
         enumerable: true
     });
 
-    Object.defineProperty(config, 'defaultTimezone', {
-        get() {
-            try {
-                // Use Intl API to get the browser's timezone
-                return Intl.DateTimeFormat().resolvedOptions().timeZone;
-            } catch (error) {
-                // Fallback to a default timezone if Intl API fails
-                return 'Etc/UTC';
-            }
-        },
-        enumerable: true
-    });
-
     Object.defineProperty(config, 'blogDomain', {
         get() {
             const blogDomain = this.blogUrl
@@ -95,21 +82,6 @@ export function initialize(applicationInstance) {
     });
 
     applicationInstance.register('config:main', config, {instantiate: false});
-    
-    // Auto-initialize timezone when admin loads
-    // We need to wait for the application to be ready
-    applicationInstance.lookup('service:store').then(store => {
-        // Check if timezone is already set
-        store.queryRecord('setting', {key: 'timezone'}).then(setting => {
-            if (!setting || !setting.value || setting.value === 'UTC' || setting.value === '') {
-                // Only set if timezone is not already configured
-                config.initializeTimezone();
-            }
-        }).catch(() => {
-            // If query fails, try to set timezone anyway
-            config.initializeTimezone();
-        });
-    });
 }
 
 export default {

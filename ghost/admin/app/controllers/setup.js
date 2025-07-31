@@ -108,11 +108,8 @@ export default class SetupController extends Controller.extend(ValidationEngine)
                         blogTitle: data.blogTitle
                     }]
                 }
-            }).then(async (result) => {
+            }).then((result) => {
                 this.config.blogTitle = data.blogTitle;
-
-                // Set timezone after successful setup
-                await this._setUserTimezone();
 
                 // don't try to login again if we are already logged in
                 if (this.get('session.isAuthenticated')) {
@@ -147,13 +144,13 @@ export default class SetupController extends Controller.extend(ValidationEngine)
         
         // Only set timezone if it doesn't exist or is the default value
         // This prevents overriding user-configured timezones
-        if (currentTimezone && currentTimezone !== 'Etc/UTC') {
+        if (currentTimezone) {
             // Timezone already set to a non-default value, don't override
             return;
         }
 
         // Get browser timezone from config
-        const browserTimezone = this.config.defaultTimezone;
+        const browserTimezone = this.config.initializeTimezone;
 
         // Use the settings API to set the timezone
         const settingsUrl = this.get('ghostPaths.url').api('settings');
@@ -199,6 +196,8 @@ export default class SetupController extends Controller.extend(ValidationEngine)
 
     async _afterAuthentication() {
         await this.session.handleAuthentication();
+        // Set timezone after successful setup
+        await this._setUserTimezone();
 
         return this.router.transitionTo('setup.done');
     }
