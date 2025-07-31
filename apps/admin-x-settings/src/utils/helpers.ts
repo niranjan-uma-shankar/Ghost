@@ -1,5 +1,5 @@
 import {TimezoneDataWithOffset} from './types';
-import {getGMTOffset, maybeFetchAliasTimezone} from '@tryghost/timezone-data';
+import {getGMTOffset, maybeFetchAliasTimezone, timezoneDataWithGMTOffset} from '@tryghost/timezone-data';
 
 export function resolveAsset(assetPath: string, relativeTo: string) {
     if (assetPath.match(/^(?:[a-z]+:)?\/\//i)) {
@@ -17,24 +17,25 @@ export function getLocalTime(timeZone: string) {
     return localTime;
 }
 
-export function findMatchingTimezone(timezoneData: TimezoneDataWithOffset[]): string {
+export function findMatchingTimezone(timezoneData?: TimezoneDataWithOffset[]): string {
     const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const tzData = timezoneData || timezoneDataWithGMTOffset();
     const aliasTimezone = maybeFetchAliasTimezone(browserTimezone);
-    let match: TimezoneDataWithOffset | undefined;
-    match = timezoneData.find(({name}) => {
+    
+    let match = tzData.find(({name}) => {
         return browserTimezone === name || aliasTimezone === name;
     });
     
     if (!match) {
         const timezonePart = browserTimezone.split('/').pop()?.replace(/_/g, ' ') || '';
-        match = timezoneData.find(({label}) => {
+        match = tzData.find(({label}) => {
             return label.includes(timezonePart);
         });
     }
    
     if (!match) {
         const browserTimezoneOffset = getGMTOffset(browserTimezone);
-        match = timezoneData.find(({offsetMinutes}) => {
+        match = tzData.find(({offsetMinutes}) => {
             return offsetMinutes === browserTimezoneOffset.offsetMinutes;
         });
     }

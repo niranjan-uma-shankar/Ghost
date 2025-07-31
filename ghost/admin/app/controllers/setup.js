@@ -4,6 +4,7 @@ import {inject as service} from '@ember/service';
 import Controller, {inject as controller} from '@ember/controller';
 import ValidationEngine from 'ghost-admin/mixins/validation-engine';
 import {action} from '@ember/object';
+import {getGMTOffset, maybeFetchAliasTimezone, timezoneDataWithGMTOffset} from '@tryghost/timezone-data';
 import {htmlSafe} from '@ember/template';
 import {inject} from 'ghost-admin/decorators/inject';
 import {isInvalidError} from 'ember-ajax/errors';
@@ -144,30 +145,57 @@ export default class SetupController extends Controller.extend(ValidationEngine)
         
         // Only set timezone if it doesn't exist or is the default value
         // This prevents overriding user-configured timezones
-        if (currentTimezone) {
+        if (currentTimezone && currentTimezone !== 'Etc/UTC') {
             // Timezone already set to a non-default value, don't override
             return;
         }
 
-        // Get browser timezone from config
-        const browserTimezone = this.config.initializeTimezone;
+        // Get the best matching timezone for the current browser timezone
+        const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const tzData = timezoneDataWithGMTOffset();
+        const aliasTimezone = maybeFetchAliasTimezone(browserTimezone);
+    
+        let match = tzData.find(({name}) => {
+            return browserTimezone === name || aliasTimezone === name;
+        });
+    
+        if (!match) {
+            const timezonePart = browserTimezone.split('/').pop()?.replace(/_/g, ' ') || '';
+            match = tzData.find(({label}) => {
+                return label.includes(timezonePart);
+            });
+        }
+   
+        if (!match) {
+            const browserTimezoneOffset = getGMTOffset(browserTimezone);
+            match = tzData.find(({offsetMinutes}) => {
+                return offsetMinutes === browserTimezoneOffset.offsetMinutes;
+            });
+        }
+
+        const publicationTimezone = match ? match.name : 'Etc/UTC';
 
         // Use the settings API to set the timezone
         const settingsUrl = this.get('ghostPaths.url').api('settings');
         const timezoneSetting = {
             key: 'timezone',
-            value: browserTimezone
+            value: publicationTimezone
         };
 
-        return this.ajax.put(settingsUrl, {
-            data: {
-                settings: [timezoneSetting]
-            }
-        }).catch((error) => {
+        try {
+            await this.ajax.put(settingsUrl, {
+                data: {
+                    settings: [timezoneSetting]
+                }
+            });
+            
+            // Reload settings to update local state after successful API call
+            await this.settings.reload();
+        } catch (error) {
             // Log error but don't fail the setup process
             // eslint-disable-next-line no-console
             console.warn('Failed to set timezone:', error);
-        });
+        }
     }
 
     _handleSaveError(resp) {

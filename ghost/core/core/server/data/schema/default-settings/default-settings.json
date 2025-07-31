@@ -123,9 +123,10 @@
             "type": "string"
         },
         "timezone": {
-            "defaultValue": "",
+            "defaultValue": "Etc/UTC",
             "validations": {
-		"type": "string"
+                "isTimezone": true,
+                "isEmpty": false
             },
             "type": "string"
         },

@@ -17,11 +17,12 @@ interface HintProps {
 }
 
 const Hint: React.FC<HintProps> = ({timezone}) => {
-    // console.log('timezone: ' + timezone);
-    if (!timezone) return;
-    const [currentTime, setCurrentTime] = useState(getLocalTime(timezone));
+    const [currentTime, setCurrentTime] = useState(getLocalTime(timezone || 'Etc/UTC'));
 
     useEffect(() => {
+        if (!timezone) {
+            return;
+        }
         const timer = setInterval(() => {
             setCurrentTime(getLocalTime(timezone));
         }, 1000);
@@ -30,6 +31,11 @@ const Hint: React.FC<HintProps> = ({timezone}) => {
             clearInterval(timer);
         };
     }, [timezone]);
+    
+    if (!timezone) {
+        return null;
+    }
+    
     return (
         <>
             The local time here is currently {currentTime}
@@ -58,7 +64,6 @@ const TimeZone: React.FC<{ keywords: string[] }> = ({keywords}) => {
     });
 
     const [shouldSaveAfterUpdate, setShouldSaveAfterUpdate] = useState(false);
-    console.log(findMatchingTimezone(timezoneData));
 
     // Only run during initialization when no timezone is set
     useEffect(() => {
