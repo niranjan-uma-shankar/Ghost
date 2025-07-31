@@ -1,5 +1,4 @@
 import {TrackedObject} from 'tracked-built-ins';
-// import {getGMTOffset, maybeFetchAliasTimezone, timezoneDataWithGMTOffset} from '@tryghost/timezone-data';
 import {timezoneDataWithGMTOffset} from '@tryghost/timezone-data';
 
 export function initialize(applicationInstance) {
