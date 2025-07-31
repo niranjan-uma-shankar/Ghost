@@ -11,7 +11,7 @@ export default Model.extend(ValidationEngine, {
     icon: attr('string'),
     accentColor: attr('string'),
     locale: attr('string'),
-    timezone: attr('string', {defaultValue: 'Etc/UTC'}),
+    timezone: attr('string'),
     codeinjectionHead: attr('string'),
     codeinjectionFoot: attr('string'),
     facebook: attr('facebook-url-user'),

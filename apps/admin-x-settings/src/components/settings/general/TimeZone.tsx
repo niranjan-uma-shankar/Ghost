@@ -2,7 +2,8 @@ import React, {useEffect, useState} from 'react';
 import TopLevelGroup from '../../TopLevelGroup';
 import useSettingGroup from '../../../hooks/useSettingGroup';
 import {Select, SettingGroupContent, withErrorBoundary} from '@tryghost/admin-x-design-system';
-import {getLocalTime} from '../../../utils/helpers';
+import {TimezoneDataWithOffset} from '../../../utils/types';
+import {findMatchingTimezone, getLocalTime} from '../../../utils/helpers';
 import {getSettingValues} from '@tryghost/admin-x-framework/api/settings';
 import {timezoneDataWithGMTOffset} from '@tryghost/timezone-data';
 
@@ -16,6 +17,8 @@ interface HintProps {
 }
 
 const Hint: React.FC<HintProps> = ({timezone}) => {
+    // console.log('timezone: ' + timezone);
+    if (!timezone) return;
     const [currentTime, setCurrentTime] = useState(getLocalTime(timezone));
 
     useEffect(() => {
@@ -45,15 +48,35 @@ const TimeZone: React.FC<{ keywords: string[] }> = ({keywords}) => {
         handleEditingChange
     } = useSettingGroup();
 
-    const [publicationTimezone] = getSettingValues(localSettings, ['timezone']) as string[];
-
-    const timezoneOptions: Array<{value: string; label: string}> = timezoneDataWithGMTOffset().map((tzOption: TimezoneDataDropdownOption) => {
+    let [publicationTimezone] = getSettingValues(localSettings, ['timezone']) as string[];
+    const timezoneData: TimezoneDataWithOffset[] = timezoneDataWithGMTOffset();
+    const timezoneOptions: Array<{value: string; label: string}> = timezoneData.map((tzOption: TimezoneDataDropdownOption) => {
         return {
             value: tzOption.name,
             label: tzOption.label
         };
     });
 
+    const [shouldSaveAfterUpdate, setShouldSaveAfterUpdate] = useState(false);
+    console.log(findMatchingTimezone(timezoneData));
+
+    // Only run during initialization when no timezone is set
+    useEffect(() => {
+        if (!publicationTimezone && timezoneData.length > 0) {
+            const defaultTimezone = findMatchingTimezone(timezoneData)?.name || '';
+            updateSetting('timezone', defaultTimezone || null);
+            setShouldSaveAfterUpdate(true);
+        }
+    }, [publicationTimezone, timezoneData, updateSetting]);
+
+    // Only run when we're saving after initialization
+    useEffect(() => {
+        if (shouldSaveAfterUpdate && publicationTimezone && saveState === 'unsaved') {
+            setShouldSaveAfterUpdate(false);
+            handleSave({force: true});
+        }
+    }, [shouldSaveAfterUpdate, publicationTimezone, saveState, handleSave]);
+    
     const handleTimezoneChange = (value?: string) => {
         updateSetting('timezone', value || null);
         handleEditingChange(true);

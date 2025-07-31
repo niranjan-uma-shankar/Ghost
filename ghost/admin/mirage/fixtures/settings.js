@@ -27,7 +27,7 @@ export default [
     setting('site', 'icon', '/content/images/2014/Feb/favicon.ico'),
     setting('site', 'accent_color', '#ff1a75'),
     setting('site', 'locale', 'en'),
-    setting('site', 'timezone', 'Etc/UTC'),
+    setting('site', 'timezone', null),
     setting('site', 'codeinjection_head', null),
     setting('site', 'codeinjection_foot', null),
     setting('site', 'facebook', 'test'),
