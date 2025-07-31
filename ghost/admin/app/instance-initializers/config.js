@@ -11,6 +11,19 @@ export function initialize(applicationInstance) {
         enumerable: true
     });
 
+    Object.defineProperty(config, 'defaultTimezone', {
+        get() {
+            try {
+                // Use Intl API to get the browser's timezone
+                return Intl.DateTimeFormat().resolvedOptions().timeZone;
+            } catch (error) {
+                // Fallback to a default timezone if Intl API fails
+                return 'Etc/UTC';
+            }
+        },
+        enumerable: true
+    });
+
     Object.defineProperty(config, 'blogDomain', {
         get() {
             const blogDomain = this.blogUrl

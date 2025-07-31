@@ -19,6 +19,7 @@ export default class SetupController extends Controller.extend(ValidationEngine)
     @service notifications;
     @service router;
     @service session;
+    @service settings;
 
     @inject config;
 
@@ -107,8 +108,11 @@ export default class SetupController extends Controller.extend(ValidationEngine)
                         blogTitle: data.blogTitle
                     }]
                 }
-            }).then((result) => {
+            }).then(async (result) => {
                 this.config.blogTitle = data.blogTitle;
+
+                // Set timezone after successful setup
+                await this._setUserTimezone();
 
                 // don't try to login again if we are already logged in
                 if (this.get('session.isAuthenticated')) {
@@ -129,6 +133,43 @@ export default class SetupController extends Controller.extend(ValidationEngine)
             });
         }).catch(() => {
             this.set('flowErrors', 'Please fill out every field correctly to set up your site.');
+        });
+    }
+
+    async _setUserTimezone() {
+        // Ensure settings are loaded
+        if (!this.settings.settingsModel) {
+            await this.settings.fetch();
+        }
+        
+        // Check if timezone setting already exists
+        const currentTimezone = this.settings.timezone;
+        
+        // Only set timezone if it doesn't exist or is the default value
+        // This prevents overriding user-configured timezones
+        if (currentTimezone && currentTimezone !== 'Etc/UTC') {
+            // Timezone already set to a non-default value, don't override
+            return;
+        }
+
+        // Get browser timezone from config
+        const browserTimezone = this.config.defaultTimezone;
+
+        // Use the settings API to set the timezone
+        const settingsUrl = this.get('ghostPaths.url').api('settings');
+        const timezoneSetting = {
+            key: 'timezone',
+            value: browserTimezone
+        };
+
+        return this.ajax.put(settingsUrl, {
+            data: {
+                settings: [timezoneSetting]
+            }
+        }).catch((error) => {
+            // Log error but don't fail the setup process
+            // eslint-disable-next-line no-console
+            console.warn('Failed to set timezone:', error);
         });
     }
 
