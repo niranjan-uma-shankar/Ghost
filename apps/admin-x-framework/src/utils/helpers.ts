@@ -6,12 +6,6 @@ export interface IGhostPaths {
     activityPubRoot: string;
 }
 
-export interface TimezoneDataWithOffset {
-    name: string;
-    label: string;
-    offsetMinutes: number;
-}
-
 export function getGhostPaths(): IGhostPaths {
     const path = window.location.pathname;
     const subdir = path.substr(0, path.search('/ghost/'));
