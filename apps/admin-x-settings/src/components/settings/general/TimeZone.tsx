@@ -17,12 +17,10 @@ interface HintProps {
 }
 
 const Hint: React.FC<HintProps> = ({timezone}) => {
-    const [currentTime, setCurrentTime] = useState(getLocalTime(timezone || 'Etc/UTC'));
+    const [currentTime, setCurrentTime] = useState(getLocalTime(timezone));
 
     useEffect(() => {
-        if (!timezone) {
-            return;
-        }
+        
         const timer = setInterval(() => {
             setCurrentTime(getLocalTime(timezone));
         }, 1000);
@@ -32,9 +30,7 @@ const Hint: React.FC<HintProps> = ({timezone}) => {
         };
     }, [timezone]);
     
-    if (!timezone) {
-        return null;
-    }
+    
     
     return (
         <>
@@ -54,33 +50,13 @@ const TimeZone: React.FC<{ keywords: string[] }> = ({keywords}) => {
         handleEditingChange
     } = useSettingGroup();
 
-    let [publicationTimezone] = getSettingValues(localSettings, ['timezone']) as string[];
-    const timezoneData: TimezoneDataWithOffset[] = timezoneDataWithGMTOffset();
-    const timezoneOptions: Array<{value: string; label: string}> = timezoneData.map((tzOption: TimezoneDataDropdownOption) => {
+    const [publicationTimezone] = getSettingValues(localSettings, ['timezone']) as string[];
+    const timezoneOptions: Array<{value: string; label: string}> = timezoneDataWithGMTOffset().map((tzOption: TimezoneDataDropdownOption) => {
         return {
             value: tzOption.name,
             label: tzOption.label
         };
     });
-
-    const [shouldSaveAfterUpdate, setShouldSaveAfterUpdate] = useState(false);
-
-    // Only run during initialization when no timezone is set
-    useEffect(() => {
-        if (!publicationTimezone && timezoneData.length > 0) {
-            const defaultTimezone = findMatchingTimezone(timezoneData);
-            updateSetting('timezone', defaultTimezone || null);
-            setShouldSaveAfterUpdate(true);
-        }
-    }, [publicationTimezone, timezoneData, updateSetting]);
-
-    // Only run when we're saving after initialization
-    useEffect(() => {
-        if (shouldSaveAfterUpdate && publicationTimezone && saveState === 'unsaved') {
-            setShouldSaveAfterUpdate(false);
-            handleSave({force: true});
-        }
-    }, [shouldSaveAfterUpdate, publicationTimezone, saveState, handleSave]);
     
     const handleTimezoneChange = (value?: string) => {
         updateSetting('timezone', value || null);

@@ -1,6 +1,3 @@
-import {TimezoneDataWithOffset} from './types';
-import {getGMTOffset, maybeFetchAliasTimezone, timezoneDataWithGMTOffset} from '@tryghost/timezone-data';
-
 export function resolveAsset(assetPath: string, relativeTo: string) {
     if (assetPath.match(/^(?:[a-z]+:)?\/\//i)) {
         return assetPath;
@@ -15,32 +12,6 @@ export function getLocalTime(timeZone: string) {
     const userLocale = navigator.language.startsWith('en') ? navigator.language : 'en-US';
     const localTime = date.toLocaleString(userLocale, options);
     return localTime;
-}
-
-export function findMatchingTimezone(timezoneData?: TimezoneDataWithOffset[]): string {
-    const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const tzData = timezoneData || timezoneDataWithGMTOffset();
-    const aliasTimezone = maybeFetchAliasTimezone(browserTimezone);
-    
-    let match = tzData.find(({name}) => {
-        return browserTimezone === name || aliasTimezone === name;
-    });
-    
-    if (!match) {
-        const timezonePart = browserTimezone.split('/').pop()?.replace(/_/g, ' ') || '';
-        match = tzData.find(({label}) => {
-            return label.includes(timezonePart);
-        });
-    }
-   
-    if (!match) {
-        const browserTimezoneOffset = getGMTOffset(browserTimezone);
-        match = tzData.find(({offsetMinutes}) => {
-            return offsetMinutes === browserTimezoneOffset.offsetMinutes;
-        });
-    }
-
-    return match ? match.name : 'Etc/UTC';
 }
 
 export function getOptionLabel(
