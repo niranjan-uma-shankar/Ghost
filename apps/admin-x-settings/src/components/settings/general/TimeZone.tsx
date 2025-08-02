@@ -46,7 +46,7 @@ const TimeZone: React.FC<{ keywords: string[] }> = ({keywords}) => {
     } = useSettingGroup();
 
     const [publicationTimezone] = getSettingValues(localSettings, ['timezone']) as string[];
-    
+
     const timezoneOptions: Array<{value: string; label: string}> = timezoneDataWithGMTOffset().map((tzOption: TimezoneDataDropdownOption) => {
         return {
             value: tzOption.name,
