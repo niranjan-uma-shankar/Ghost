@@ -27,7 +27,6 @@ const Hint: React.FC<HintProps> = ({timezone}) => {
             clearInterval(timer);
         };
     }, [timezone]);
-
     return (
         <>
             The local time here is currently {currentTime}
