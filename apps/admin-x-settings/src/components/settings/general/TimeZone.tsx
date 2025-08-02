@@ -2,8 +2,7 @@ import React, {useEffect, useState} from 'react';
 import TopLevelGroup from '../../TopLevelGroup';
 import useSettingGroup from '../../../hooks/useSettingGroup';
 import {Select, SettingGroupContent, withErrorBoundary} from '@tryghost/admin-x-design-system';
-import {TimezoneDataWithOffset} from '../../../utils/types';
-import {findMatchingTimezone, getLocalTime} from '../../../utils/helpers';
+import {getLocalTime} from '../../../utils/helpers';
 import {getSettingValues} from '@tryghost/admin-x-framework/api/settings';
 import {timezoneDataWithGMTOffset} from '@tryghost/timezone-data';
 
@@ -20,7 +19,6 @@ const Hint: React.FC<HintProps> = ({timezone}) => {
     const [currentTime, setCurrentTime] = useState(getLocalTime(timezone));
 
     useEffect(() => {
-        
         const timer = setInterval(() => {
             setCurrentTime(getLocalTime(timezone));
         }, 1000);
@@ -29,9 +27,7 @@ const Hint: React.FC<HintProps> = ({timezone}) => {
             clearInterval(timer);
         };
     }, [timezone]);
-    
-    
-    
+
     return (
         <>
             The local time here is currently {currentTime}
@@ -51,13 +47,14 @@ const TimeZone: React.FC<{ keywords: string[] }> = ({keywords}) => {
     } = useSettingGroup();
 
     const [publicationTimezone] = getSettingValues(localSettings, ['timezone']) as string[];
+    
     const timezoneOptions: Array<{value: string; label: string}> = timezoneDataWithGMTOffset().map((tzOption: TimezoneDataDropdownOption) => {
         return {
             value: tzOption.name,
             label: tzOption.label
         };
     });
-    
+
     const handleTimezoneChange = (value?: string) => {
         updateSetting('timezone', value || null);
         handleEditingChange(true);
